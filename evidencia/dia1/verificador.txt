@@ -81,14 +81,8 @@ Verificando docs\ARQUITECTURA.md contra C:\Users\danie\taskflow-copilot-DanielDe
 [OK]         línea 49   ruta      src/test/java/com/taskflow/integration/  ->  src\test\java\com\taskflow\integration
 [OK]         línea 49   anotación @SpringBootTest  ->  se usa en 5 archivo(s), p. ej. src\test\java\com\taskflow\integration\AuthControllerTest.java
 [OK]         línea 60   clase     GlobalExceptionHandler  ->  src\main\java\com\taskflow\advice\GlobalExceptionHandler.java
-[NO EXISTE]  línea 62   clase     TaskDateValidator  ->  no hay TaskDateValidator.java y el nombre no sale en src ni en pom.xml
-[NO EXISTE]  línea 62   ruta      src/main/java/com/taskflow/service/TaskDateValidator.java  ->  no está en el disco
 
 Sin verificar (17): el script no sabe comprobarlos; léelos tú:
   `-Ddocker.tests=true` (l. 49), `*IT.java` (l. 49), `/auth/**` (l. 40), `201 Created` (l. 24), `Authorization: Bearer <token>` (l. 42), `controller` (l. 19), `exp` (l. 41), `HTTP POST /projects/{projectId}/tasks` (l. 27), `iat` (l. 41), `mvn -q test` (l. 47), `mvn -q test "-Dtest=TaskServiceTest"` (l. 52), `mvn spring-boot:run "-Dspring-boot.run.profiles=h2"` (l. 53), `role` (l. 41), `status` (l. 32), `status = TODO` (l. 22), `sub` (l. 41), `users` (l. 42)
 
-Lo que NO EXISTE (corrígelo con el agente):
-  línea 62: TaskDateValidator
-  línea 62: src/main/java/com/taskflow/service/TaskDateValidator.java
-
-Resumen: 73 OK · 3 REVISA · 5 EXTERNA · 2 NO EXISTE · 17 sin verificar
+Resumen: 73 OK · 3 REVISA · 5 EXTERNA · 0 NO EXISTE · 17 sin verificar
