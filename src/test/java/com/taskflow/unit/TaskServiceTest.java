@@ -17,6 +17,8 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
+import java.time.LocalDate;
+import java.util.List;
 import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -133,8 +135,82 @@ class TaskServiceTest {
     }
 
     @Nested
-    @DisplayName("eliminar")
-    class Eliminar {
+    @DisplayName("SinResponsable")
+    class SinResponsable {
+
+        @Test
+        void sinResponsable_devuelveSoloSinResponsableEnOrdenPorFecha() {
+            Task sin10 = null;
+            Task conResp = null;
+            Task sinFecha = null;
+            Task sin2 = null;
+            try {
+                sin10 = new Task(10L, "Sin10", "d", TaskStatus.TODO, Priority.MED, PROYECTO, null, java.time.LocalDate.now().plusDays(10));
+                conResp = new Task(20L, "ConResp", "d", TaskStatus.TODO, Priority.MED, PROYECTO, 99L, java.time.LocalDate.now().plusDays(5));
+                sinFecha = new Task(30L, "SinFecha", "d", TaskStatus.TODO, Priority.MED, PROYECTO, null, null);
+                sin2 = new Task(40L, "Sin2", "d", TaskStatus.TODO, Priority.MED, PROYECTO, null, java.time.LocalDate.now().plusDays(2));
+            } catch (TaskValidationException e) {
+                throw new IllegalStateException("dato de prueba inválido", e);
+            }
+
+            // El repositorio devuelve, EN ESTE ORDEN, sin10, conResp, sinFecha, sin2
+            when(repository.findAll()).thenReturn(List.of(sin10, conResp, sinFecha, sin2));
+
+            var result = service.sinResponsable();
+
+            // Debe devolver solo las tres sin responsable ordenadas POR_FECHA: sin2 (+2), sin10 (+10), sinFecha (null)
+            assertEquals(3, result.size());
+            assertEquals(40L, result.get(0).getId());
+            assertEquals(10L, result.get(1).getId());
+            assertEquals(30L, result.get(2).getId());
+        }
+
+        @Test
+        void sinResponsable_conSoloConResponsable_devuelveVacio() {
+            Task con1 = tarea(1L, "Aaa", 5L);
+            Task con2 = tarea(2L, "Bbb", 6L);
+            when(repository.findAll()).thenReturn(List.of(con1, con2));
+
+            var result = service.sinResponsable();
+
+            assertEquals(0, result.size());
+        }
+    }
+
+        @Nested
+        @DisplayName("vencidas")
+        class Vencidas {
+
+            @Test
+            void vencidas_devuelveSoloVencidasEnOrden() {
+                // Datos reales: algunas vencidas, una DONE vencida (debe excluirse), y una sin dueDate.
+                Task vencida1 = null;
+                Task vencida2 = null;
+                Task doneVencida = null;
+                Task sinFecha = null;
+                try {
+                    vencida1 = new Task(1L, "V01", "d", TaskStatus.IN_PROGRESS, Priority.MED, PROYECTO, 1L, LocalDate.now().minusDays(1));
+                    vencida2 = new Task(2L, "V02", "d", TaskStatus.IN_PROGRESS, Priority.MED, PROYECTO, 1L, LocalDate.now().minusDays(3));
+                    doneVencida = new Task(3L, "DONE-OLD", "d", TaskStatus.DONE, Priority.MED, PROYECTO, 1L, LocalDate.now().minusDays(5));
+                    sinFecha = new Task(4L, "Sin fecha", "d", TaskStatus.TODO, Priority.MED, PROYECTO, 1L, null);
+                } catch (TaskValidationException e) {
+                    throw new IllegalStateException("dato de prueba inválido", e);
+                }
+
+                when(repository.findAll()).thenReturn(List.of(vencida1, vencida2, doneVencida, sinFecha));
+
+                var result = service.vencidas();
+
+                // Solo vencida1 y vencida2 (doneVencida y sinFecha se excluyen), orden por fecha asc (más antigua primero)
+                assertEquals(2, result.size());
+                assertEquals(2L, result.get(0).getId());
+                assertEquals(1L, result.get(1).getId());
+            }
+        }
+
+        @Nested
+        @DisplayName("eliminar")
+        class Eliminar {
 
         @Test
         void eliminar_existente_llamaDeleteById() {
