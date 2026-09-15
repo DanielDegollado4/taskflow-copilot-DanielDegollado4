@@ -75,11 +75,20 @@ public class TaskController {
     /** GET /tasks/{id} — 200 con TaskResponse, o 404 uniforme (orElseThrow -> advice). */
     @Operation(summary = "Obtiene una tarea por id",
             description = "200 con el TaskResponse; 404 uniforme si el id no existe.")
-    @GetMapping("/tasks/{id}")
+    @GetMapping("/tasks/{id:\\d+}")
     public TaskResponse getTaskPorId(@PathVariable("id") Long id) {
         Task task = taskService.buscarPorId(id)
                 .orElseThrow(() -> new TaskNotFoundException(id));
         return TaskMapper.aResponse(task);
+    }
+
+    /** GET /tasks/overdue — devuelve las tareas vencidas ordenadas por fecha (las más antiguas primero). */
+    @Operation(summary = "Lista tareas vencidas",
+            description = "Devuelve las tareas vencidas en orden ascendente por dueDate.")
+    @GetMapping("/tasks/overdue")
+    public List<TaskResponse> getOverdueTasks() {
+        List<Task> tareas = taskService.vencidas();
+        return tareas.stream().map(TaskMapper::aResponse).toList();
     }
 
     /**

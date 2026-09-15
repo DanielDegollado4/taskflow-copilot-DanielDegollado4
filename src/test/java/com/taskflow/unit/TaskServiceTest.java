@@ -17,6 +17,8 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
+import java.time.LocalDate;
+import java.util.List;
 import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -133,8 +135,39 @@ class TaskServiceTest {
     }
 
     @Nested
-    @DisplayName("eliminar")
-    class Eliminar {
+        @DisplayName("vencidas")
+        class Vencidas {
+
+            @Test
+            void vencidas_devuelveSoloVencidasEnOrden() {
+                // Datos reales: algunas vencidas, una DONE vencida (debe excluirse), y una sin dueDate.
+                Task vencida1 = null;
+                Task vencida2 = null;
+                Task doneVencida = null;
+                Task sinFecha = null;
+                try {
+                    vencida1 = new Task(1L, "V01", "d", TaskStatus.IN_PROGRESS, Priority.MED, PROYECTO, 1L, LocalDate.now().minusDays(1));
+                    vencida2 = new Task(2L, "V02", "d", TaskStatus.IN_PROGRESS, Priority.MED, PROYECTO, 1L, LocalDate.now().minusDays(3));
+                    doneVencida = new Task(3L, "DONE-OLD", "d", TaskStatus.DONE, Priority.MED, PROYECTO, 1L, LocalDate.now().minusDays(5));
+                    sinFecha = new Task(4L, "Sin fecha", "d", TaskStatus.TODO, Priority.MED, PROYECTO, 1L, null);
+                } catch (TaskValidationException e) {
+                    throw new IllegalStateException("dato de prueba inválido", e);
+                }
+
+                when(repository.findAll()).thenReturn(List.of(vencida1, vencida2, doneVencida, sinFecha));
+
+                var result = service.vencidas();
+
+                // Solo vencida1 y vencida2 (doneVencida y sinFecha se excluyen), orden por fecha asc (más antigua primero)
+                assertEquals(2, result.size());
+                assertEquals(2L, result.get(0).getId());
+                assertEquals(1L, result.get(1).getId());
+            }
+        }
+
+        @Nested
+        @DisplayName("eliminar")
+        class Eliminar {
 
         @Test
         void eliminar_existente_llamaDeleteById() {
