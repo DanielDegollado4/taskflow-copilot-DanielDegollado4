@@ -135,6 +135,49 @@ class TaskServiceTest {
     }
 
     @Nested
+    @DisplayName("SinResponsable")
+    class SinResponsable {
+
+        @Test
+        void sinResponsable_devuelveSoloSinResponsableEnOrdenPorFecha() {
+            Task sin10 = null;
+            Task conResp = null;
+            Task sinFecha = null;
+            Task sin2 = null;
+            try {
+                sin10 = new Task(10L, "Sin10", "d", TaskStatus.TODO, Priority.MED, PROYECTO, null, java.time.LocalDate.now().plusDays(10));
+                conResp = new Task(20L, "ConResp", "d", TaskStatus.TODO, Priority.MED, PROYECTO, 99L, java.time.LocalDate.now().plusDays(5));
+                sinFecha = new Task(30L, "SinFecha", "d", TaskStatus.TODO, Priority.MED, PROYECTO, null, null);
+                sin2 = new Task(40L, "Sin2", "d", TaskStatus.TODO, Priority.MED, PROYECTO, null, java.time.LocalDate.now().plusDays(2));
+            } catch (TaskValidationException e) {
+                throw new IllegalStateException("dato de prueba inválido", e);
+            }
+
+            // El repositorio devuelve, EN ESTE ORDEN, sin10, conResp, sinFecha, sin2
+            when(repository.findAll()).thenReturn(List.of(sin10, conResp, sinFecha, sin2));
+
+            var result = service.sinResponsable();
+
+            // Debe devolver solo las tres sin responsable ordenadas POR_FECHA: sin2 (+2), sin10 (+10), sinFecha (null)
+            assertEquals(3, result.size());
+            assertEquals(40L, result.get(0).getId());
+            assertEquals(10L, result.get(1).getId());
+            assertEquals(30L, result.get(2).getId());
+        }
+
+        @Test
+        void sinResponsable_conSoloConResponsable_devuelveVacio() {
+            Task con1 = tarea(1L, "Aaa", 5L);
+            Task con2 = tarea(2L, "Bbb", 6L);
+            when(repository.findAll()).thenReturn(List.of(con1, con2));
+
+            var result = service.sinResponsable();
+
+            assertEquals(0, result.size());
+        }
+    }
+
+        @Nested
         @DisplayName("vencidas")
         class Vencidas {
 

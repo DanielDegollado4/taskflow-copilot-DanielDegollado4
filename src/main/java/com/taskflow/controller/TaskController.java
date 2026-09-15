@@ -91,6 +91,15 @@ public class TaskController {
         return tareas.stream().map(TaskMapper::aResponse).toList();
     }
 
+    /** GET /tasks/unassigned — devuelve las tareas sin responsable ordenadas por fecha (nulls al final). */
+    @Operation(summary = "Lista tareas sin responsable",
+            description = "Devuelve las tareas sin responsable (assigneeId null) en orden ascendente por dueDate.")
+    @GetMapping("/tasks/unassigned")
+    public List<TaskResponse> getUnassignedTasks() {
+        List<Task> tareas = taskService.sinResponsable();
+        return tareas.stream().map(TaskMapper::aResponse).toList();
+    }
+
     /**
      * POST /projects/{projectId}/tasks — crea una tarea bajo un proyecto. 201 + header Location
      * apuntando a donde el recurso SE LEE (/tasks/{id}), no a la URL de creación. @Valid dispara Bean
