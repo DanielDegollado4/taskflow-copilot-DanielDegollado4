@@ -1,0 +1,124 @@
+diff --git a/src/main/java/com/taskflow/controller/ProjectController.java b/src/main/java/com/taskflow/controller/ProjectController.java
+index 56ccccf..40d1987 100644
+--- a/src/main/java/com/taskflow/controller/ProjectController.java
++++ b/src/main/java/com/taskflow/controller/ProjectController.java
+@@ -2,6 +2,7 @@ package com.taskflow.controller;
+ 
+ import com.taskflow.dto.ProjectRequest;
+ import com.taskflow.dto.ProjectResponse;
++import com.taskflow.dto.ProjectSummaryResponse;
+ import com.taskflow.dto.TaskResponse;
+ import com.taskflow.exception.ProjectNotFoundException;
+ import com.taskflow.mapper.ProjectMapper;
+@@ -86,6 +87,16 @@ public class ProjectController {
+         return tareas.stream().map(TaskMapper::aResponse).toList();
+     }
+ 
++    /** GET /projects/{id}/summary — resumen para tablero: conteos por estado y vencidas. */
++    @Operation(summary = "Resumen de un proyecto",
++            description = "Devuelve cuántas tareas tiene el proyecto en cada estado y cuántas están vencidas. 404 si el proyecto no existe.")
++    @GetMapping("/projects/{id}/summary")
++    public com.taskflow.dto.ProjectSummaryResponse getResumen(@PathVariable("id") Long id) {
++        Project proyecto = projectService.buscarPorId(id)
++                .orElseThrow(() -> new ProjectNotFoundException(id));
++        return projectService.resumen(proyecto);
++    }
++
+     /**
+      * POST /projects — 201 + Location a /projects/{id}. @Valid dispara Bean Validation (400 si falla).
+      * MP-9: el owner sale del JWT — el Authentication (inyectado por Spring Security) trae el username
+diff --git a/src/main/java/com/taskflow/mapper/ProjectMapper.java b/src/main/java/com/taskflow/mapper/ProjectMapper.java
+index a33a95b..3d051f4 100644
+--- a/src/main/java/com/taskflow/mapper/ProjectMapper.java
++++ b/src/main/java/com/taskflow/mapper/ProjectMapper.java
+@@ -1,15 +1,13 @@
+ package com.taskflow.mapper;
+ 
+ import com.taskflow.dto.ProjectResponse;
++import com.taskflow.dto.ProjectSummaryResponse;
+ import com.taskflow.model.Project;
+ 
++import java.util.Map;
++
+ /**
+- * ProjectMapper — puente DTO &lt;-&gt; dominio del lado Project. Estático, a mano, sin MapStruct.
+- *
+- * HOY se SIMPLIFICÓ (lo prometía D3): la entidad ya guarda 'ownerId' directo (se aplanó el 'User
+- * owner' en MP-4), así que aResponse ya no deriva el id desde un objeto (p.getOwner().id()) — lee
+- * p.getOwnerId() tal cual. El contrato de salida (ProjectResponse con ownerId Long) no cambió; el
+- * mapeo se volvió trivial porque el dominio por fin coincide con la forma canónica.
++ * ProjectMapper — puente DTO <-> dominio del lado Project. Estático, a mano, sin MapStruct.
+  */
+ public final class ProjectMapper {
+ 
+@@ -22,4 +20,11 @@ public final class ProjectMapper {
+         return new ProjectResponse(p.getId(), p.getName(), p.getDescription(),
+                 p.getOwnerId(), p.getCreatedAt());
+     }
++
++    /** Resumen de un proyecto -> DTO de salida de GET /projects/{id}/summary. */
++    public static ProjectSummaryResponse aSummary(Long projectId, String projectName,
++                                                   long totalTasks, Map<String, Long> byStatus,
++                                                   long overdue) {
++        return new ProjectSummaryResponse(projectId, projectName, totalTasks, byStatus, overdue);
++    }
+ }
+diff --git a/src/main/java/com/taskflow/service/ProjectService.java b/src/main/java/com/taskflow/service/ProjectService.java
+index d315e3f..0a977a6 100644
+--- a/src/main/java/com/taskflow/service/ProjectService.java
++++ b/src/main/java/com/taskflow/service/ProjectService.java
+@@ -1,9 +1,12 @@
+ package com.taskflow.service;
+ 
+ import com.taskflow.dto.ProjectRequest;
++import com.taskflow.dto.ProjectSummaryResponse;
+ import com.taskflow.exception.ProjectNotFoundException;
++import com.taskflow.mapper.ProjectMapper;
+ import com.taskflow.model.Project;
+ import com.taskflow.model.Task;
++import com.taskflow.model.TaskStatus;
+ import com.taskflow.model.User;
+ import com.taskflow.repository.ProjectRepository;
+ import com.taskflow.repository.TaskRepository;
+@@ -13,6 +16,7 @@ import org.springframework.stereotype.Service;
+ 
+ import java.time.LocalDate;
+ import java.util.List;
++import java.util.Map;
+ import java.util.Optional;
+ 
+ /**
+@@ -52,16 +56,28 @@ public class ProjectService {
+     }
+ 
+     /**
+-     * Las tareas de un proyecto: MP-6 sustituye el stream-filter de D2 por la derived query
+-     * taskRepository.findByProjectId(projectId) — el LIKE... perdón, el WHERE project_id = ? lo hace
+-     * la BD (viajan solo las filas del proyecto). "no existe el proyecto" (404) lo decide el
+-     * controller con buscarPorId; ESTE método, si el proyecto existe pero no tiene tareas, devuelve
+-     * [] (-> 200 con []). No son lo mismo.
++     * Las tareas de un proyecto: derived query.
+      */
+     public List<Task> tareasDe(Long projectId) {
+         return taskRepository.findByProjectId(projectId);
+     }
+ 
++    /**
++     * Devuelve el resumen del proyecto: total, conteos por estado (siempre TODO/IN_PROGRESS/DONE)
++     * y cuántas tareas están vencidas según Task.estaVencida().
++     * Recibe la entidad proyecto ya encontrada (el controller decide 404).
++     */
++    public com.taskflow.dto.ProjectSummaryResponse resumen(Project proyecto) {
++        List<Task> tareas = taskRepository.findByProjectId(proyecto.getId());
++        long total = tareas.size();
++        long todo = tareas.stream().filter(t -> t.getStatus() == com.taskflow.model.TaskStatus.TODO).count();
++        long inProgress = tareas.stream().filter(t -> t.getStatus() == com.taskflow.model.TaskStatus.IN_PROGRESS).count();
++        long done = tareas.stream().filter(t -> t.getStatus() == com.taskflow.model.TaskStatus.DONE).count();
++        long overdue = tareas.stream().filter(com.taskflow.model.Task::estaVencida).count();
++        Map<String, Long> byStatus = Map.of("TODO", todo, "IN_PROGRESS", inProgress, "DONE", done);
++        return ProjectMapper.aSummary(proyecto.getId(), proyecto.getName(), total, byStatus, overdue);
++    }
++
+     /**
+      * Crea un proyecto (POST): el request trae name y description; el ownerId ya NO es una constante
+      * (murió el 1L fijo de D3) — se resuelve del USERNAME AUTENTICADO (el que puso el JWT en el
