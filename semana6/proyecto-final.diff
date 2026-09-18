@@ -102,7 +102,7 @@ index db4698d..cefca4c 100644
  }
 diff --git a/src/test/java/com/taskflow/slice/ProgresoProyectosControllerTest.java b/src/test/java/com/taskflow/slice/ProgresoProyectosControllerTest.java
 new file mode 100644
-index 0000000..e7b23df
+index 0000000..467c6de
 --- /dev/null
 +++ b/src/test/java/com/taskflow/slice/ProgresoProyectosControllerTest.java
 @@ -0,0 +1,54 @@
@@ -117,7 +117,7 @@ index 0000000..e7b23df
 +import org.springframework.beans.factory.annotation.Autowired;
 +import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 +import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
-+import org.springframework.boot.test.mock.mockito.MockBean;
++import org.springframework.test.context.bean.override.mockito.MockitoBean;
 +import org.springframework.test.context.junit.jupiter.SpringExtension;
 +import org.springframework.test.web.servlet.MockMvc;
 +
@@ -136,10 +136,10 @@ index 0000000..e7b23df
 +    @Autowired
 +    MockMvc mockMvc;
 +
-+    @MockBean
++    @MockitoBean
 +    ProjectService projectService;
 +
-+    @MockBean
++    @MockitoBean
 +    JwtAuthenticationFilter jwtAuthenticationFilter;
 +
 +    @Test
