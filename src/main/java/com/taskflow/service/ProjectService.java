@@ -121,4 +121,27 @@ public class ProjectService {
         long vencidas = tareas.stream().filter(Task::estaVencida).count();
         return ProjectMapper.aResumen(proyecto, tareas.size(), porEstado, vencidas);
     }
+
+    /**
+     * Progreso por proyecto para GET /reports/progress: todos los proyectos, conteos y porcentaje
+     * redondeado a un decimal. Ordenado por projectId asc.
+     */
+    public java.util.List<com.taskflow.dto.ProjectProgressResponse> progresoPorProyecto() {
+        java.util.List<Project> proyectos = projectRepository.findAll();
+        return proyectos.stream()
+                .sorted(java.util.Comparator.comparing(Project::getId))
+                .map(p -> {
+                    java.util.List<Task> tareas = taskRepository.findByProjectId(p.getId());
+                    long total = tareas.size();
+                    long done = tareas.stream().filter(t -> t.getStatus() == TaskStatus.DONE).count();
+                    double percent;
+                    if (total == 0) {
+                        percent = 0.0;
+                    } else {
+                        percent = Math.round((done * 100.0 / total) * 10.0) / 10.0;
+                    }
+                    return ProjectMapper.aProgreso(p, total, done, percent);
+                })
+                .toList();
+    }
 }
