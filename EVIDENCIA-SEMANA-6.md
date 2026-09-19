@@ -1181,7 +1181,7 @@ En `.github\skills\crear-endpoint-taskflow\SKILL.md` existen tres reglas que no 
 
 ### Rómpelo a propósito: una skill con el frontmatter roto
 
-Para romper el frontmatter, se puede elminar la primera línea de la skill del script: 
+Para romper el frontmatter, se puede eliminar la primera línea de la skill del script: 
 
 ```
 $f = '.github\skills\verificar-taskflow\SKILL.md'
