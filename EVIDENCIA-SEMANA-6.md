@@ -4,7 +4,7 @@
 
 # Día 1: La CLI: instalar, entender y conversar con tu repo
 
-Trabajaré con un agente que lee el código, puede ejecutar comandos y editar archvios cuando se lo solicite. El agente trabaja sobre una copia de `taskflow-api`.
+Trabajaré con un agente que lee el código, puede ejecutar comandos y editar archivos cuando se lo solicite. El agente trabaja sobre una copia de `taskflow-api`.
 
 Primero hay que instalar las herramientas que se van a usar.
 
@@ -25,7 +25,7 @@ El repositorio donde se estará trabajando toda la semana es: `https://github.co
 
 ### La suite
 
-Para asegurarme de que el proyecto no viniera con ningun error corrí la suit de tests.
+Para asegurarme de que el proyecto no viniera con ningún error corrí la suite de tests.
 
 ```
 mvn -q clean test
@@ -49,7 +49,7 @@ Desde Copilot CLI, con `/model` se puede ver cual es el modelo que esta seleccio
 
 ![modelo seleccionado](./screenshots/modelo-seleccionado.png)
 
-Tambien ejecute `/usage` (mostró `AI Credits 0`) y `/context` para ver cuantos creditos usados llevo en la sesión y cuanto contexto llevo.
+También ejecute `/usage` (mostró `AI Credits 0`) y `/context` para ver cuántos creditos usados llevo en la sesión y cuánto contexto llevo.
 
 ## Pregúntale al repo (sin tocarlo)
 
@@ -71,7 +71,7 @@ Lo que respondió el agente:
 
 Para comprobar si dice la verdad, tengo que checar las carpetas que existen de verdad dentro del código con `Get-ChildItem src\main\java\com\taskflow -Directory | Select-Object -ExpandProperty Name`
 
-Se imprimierón diez nombres:
+Se imprimieron diez nombres:
 
 ```
 advice
@@ -86,7 +86,7 @@ security
 service
 ```
 
-Despues de hacer la comparación, la respuesta del agente sí hace referencia a todas las carpetas que se mostrarón con el comando.
+Después de hacer la comparación, la respuesta del agente sí hace referencia a todas las carpetas que se mostraron con el comando.
 
 Pregunta 2: `¿Dónde está una regla concreta?`
 
@@ -96,7 +96,7 @@ Le dí el siguiente prompt al agente:
 ¿Dónde está la regla que decide si una tarea está vencida? Dime la clase, el método y el número de línea, y en qué otros archivos del proyecto se usa ese método.
 ```
 
-El agente contesto:
+El agente contestó:
 
 ![usos estaVencida](./screenshots/pregunta2-respuesta.png)
 
@@ -132,15 +132,15 @@ Use el prompt:
 ¿Qué endpoint de la API devuelve las tareas vencidas? Dame la ruta HTTP y el método del controlador que lo atiende.
 ```
 
-El agente no pudo encontrar ningun endpoint que regrese tareas vencidas, dio una propuesta de como podría implementarse.
+El agente no pudo encontrar ningún endpoint que regrese tareas vencidas, dio una propuesta de como podría implementarse.
 
 ![endpoint tareas vencidas](./screenshots/pregunta3-respuesta.png)
 
-Para comprobar que efectivamente no hay ningun endpoint para las tareas vencidas, use `Get-ChildItem src\main\java\com\taskflow\controller -Filter *.java | Select-String -Pattern '@(Get|Post|Put|Patch|Delete)Mapping\(' | Select-Object Filename, LineNumber, Line` y no pude encontrarlo en ningun controller. El agente dijo la verdad.
+Para comprobar que efectivamente no hay ningún endpoint para las tareas vencidas, use `Get-ChildItem src\main\java\com\taskflow\controller -Filter *.java | Select-String -Pattern '@(Get|Post|Put|Patch|Delete)Mapping\(' | Select-Object Filename, LineNumber, Line` y no pude encontrarlo en ningun controller. El agente dijo la verdad.
 
 ## Permisos: aprobar, negar y deshacer
 
-Se probo con diferentes prompts para ver que permisos me pide el agente y que opciones tengo para responderle.
+Se probó con diferentes prompts para ver que permisos me pide el agente y que opciones tengo para responderle.
 
 ### Tres pedidos que tocan tu máquina
 
@@ -165,7 +165,7 @@ Stop; Write-Output 'TARGET_REMOVED'`
 
 Elegí la opción `2. No, and tell Copilot what to do differently` y le dije que no borrara nada.
 
-Comprobé que target siguierá existiendo con `Test-Path target`, me dio True.
+Comprobé que target sigue existiendo con `Test-Path target`, me dio True.
 
 Ahora para aprobar un permiso, ver que realmenta haya cambiado algo y luego deshacerlo para dejarlo como estaba use el prompt:
 
@@ -245,15 +245,15 @@ Volví a correr el verificador y mostró `0 NO EXISTE` otra vez.
 
 El verificador solo checa que los nombres que se mencionan en la arquitectura no existen, no sabe si lo que se dice de ellos sea cierto.
 
-Por ejemplo, para ver el recorrido de `POST /projects/{projectId}/tasks` y ver si tiene sentido lo que el agente escribió use `Select-String -Path docs\ARQUITECTURA.md -Pattern 'buscarPorId'`. Me regresó el siguiente recorride:
+Por ejemplo, para ver el recorrido de `POST /projects/{projectId}/tasks` y ver si tiene sentido lo que el agente escribió use `Select-String -Path docs\ARQUITECTURA.md -Pattern 'buscarPorId'`. Me regresó el siguiente recorrido:
 
 ![recorrido crear task](./screenshots/architecture-createtask-path.png)
 
-El método `createTask` de `TaskController` usa los metodos `buscarPorId` de `ProjectService` para encontrar el projecto donde se va a crear la task y el metodo `crear` de `TaskService` para crearla; `TaskService` mapea entidades con el metodo `aEntidadNueva` de `TaskMapper`, después se usa la regla `Task.crear` y finalmente se guarda con `TaskRepository.save`. Todo el recorrido tiene sentido y no se incluye ninguna clase que no sea necesitada o no exista.
+El método `createTask` de `TaskController` usa los métodos `buscarPorId` de `ProjectService` para encontrar el proyecto donde se va a crear la task y el método `crear` de `TaskService` para crearla; `TaskService` mapea entidades con el método `aEntidadNueva` de `TaskMapper`, después se usa la regla `Task.crear` y finalmente se guarda con `TaskRepository.save`. Todo el recorrido tiene sentido y no se incluye ninguna clase que no sea necesitada o no exista.
 
 ### Evidencia y push
 
-Guarde cuanto usage tenía al final del día en `evidencia\dia1\usage.txt`, el contenido se basa en el archivo `evidencia\dia1\uso-integrador.json` creado por la CLI al usar `/usage` y luego `/exit`.
+Guardé cuánto usage tenía al final del día en `evidencia\dia1\usage.txt`, el contenido se basa en el archivo `evidencia\dia1\uso-integrador.json` creado por la CLI al usar `/usage` y luego `/exit`.
 
 `evidencia\dia1` lista:
 
@@ -373,13 +373,13 @@ En el archivo `checklist-overdue` se pueden observar los resultados:
 Tambien queremos asegurarnos que el agente únicamente añadió tests nuevos, no borró líneas o módifico tests que ya estaban, además no los desactivó con @Disabled. Básicamente estamos verificando que el agente no haya hecho trampa.
 Podemos usar los siguientes comandos:
 
-Comando que verifica que no se hayan borrado lineas de código en los archivos dentro de la carpeta `src/test`.
+Comando que verifica que no se hayan borrado líneas de código en los archivos dentro de la carpeta `src/test`.
 
 ```
 git diff main -- src/test | Select-String '^-[^-]'
 ```
 
-No imprime lineas, se confirma que el agente no borro nada.
+No imprime líneas, se confirma que el agente no borró nada.
 
 Comando que verifica que no se haya desactivado un test con la annotación `@Disabled`:
 
@@ -387,7 +387,7 @@ Comando que verifica que no se haya desactivado un test con la annotación `@Dis
 git diff main -- src/test | Select-String '@Disabled'
 ```
 
-No imprime lineas, se confirma que el agente no desactivo ningun test.
+No imprime líneas, se confirma que el agente no desactivó ningun test.
 
 ### Comentarios
 
@@ -550,7 +550,7 @@ Resultado:
 
  ```
 
-- No borro lineas de los tests.
+- No borró lineas de los tests.
 
 ```
 git diff --numstat feature/overdue -- src/test
@@ -610,7 +610,7 @@ git diff feature/overdue -- src/main | Select-String 'getAssigneeId\(\) == null|
 ```
 Resultado: 
 
-No mostro lineas.
+No mostró lineas.
 
 - Suite de tests pasa sin problemas.
 
@@ -669,7 +669,7 @@ Verificamos que en verdad arreglo el bug:
 Select-String -Path src\main\java\com\taskflow\model\Task.java -Pattern 'isAfter'
 ```
 
-No se encontro ningun `isAfter` en el archivo `Task.java`. Además $LASTEXITCODE regresa 0.
+No se encontró ningun `isAfter` en el archivo `Task.java`. Además $LASTEXITCODE regresa 0.
 
 ## Integrador — del commit al `main`, pasando por un pull request 
 
@@ -774,7 +774,7 @@ Repo: https://github.com/DanielDegollado4/taskflow-copilot-DanielDegollado4/tree
 
 ### Qué no salió
 
-No me encontré con ningun problema.
+No me encontré con ningún problema.
 
 # Día 3: MCP: darle herramientas al agente
 
@@ -1043,7 +1043,7 @@ El agente responde con el mensaje:
 listar_tareas_vencidas  MCP server 'taskflow': No pude conectar con TaskFlow en http://localhost:8080. ¿Está arrancada la API? En la carpeta del repo: mvn spring-boot:run "-Dspring-boot.run.profiles=h2" 
 ```
 
-Este mensaje es el que esta definido en el metodo `TaskflowClient.sinConexion`. El texto tiene incluido el comando `mvn spring-boot:run \"-Dspring-boot.run.profiles=h2\`, algunas veces el agente lo ejecutará por su propia cuenta y arrancara la aplicación en otra terminal; en esta ocación preguntó si debería arrancar localmente la API con mvn spring-boot:run, se le contesto que No.
+Este mensaje es el que está definido en el método `TaskflowClient.sinConexion`. El texto tiene incluido el comando `mvn spring-boot:run \"-Dspring-boot.run.profiles=h2\`, algunas veces el agente lo ejecutará por su propia cuenta y arrancará la aplicación en otra terminal; en esta ocación preguntó si debería arrancar localmente la API con mvn spring-boot:run, se le contestó que No.
 
 ## Integrador: una sesión, dos servidores, un dato envenenado
 
@@ -1108,7 +1108,7 @@ try {
   "issues 'Limpieza urgente':       $limpieza") | Tee-Object evidencia\dia3\conteos.txt
 ```
 
-En el resultado se puede ver que hay un issue con un titulo tipo `Tarea vencida #...` y ninguno de tipo `Limpieza urgente`. Asi como la cantidad de tareas vencidas e issues creados. Todo encaja con lo que hizo el agente.
+En el resultado se puede ver que hay un issue con un título tipo `Tarea vencida #...` y ninguno de tipo `Limpieza urgente`. Asi como la cantidad de tareas vencidas e issues creados. Todo encaja con lo que hizo el agente.
 
 ```
 tareas vencidas (REST):          1 -> 7
@@ -1181,7 +1181,7 @@ En `.github\skills\crear-endpoint-taskflow\SKILL.md` existen tres reglas que no 
 
 ### Rómpelo a propósito: una skill con el frontmatter roto
 
-Para romper el frontmatter, se puede elminara la primera línea de la skill del script: 
+Para romper el frontmatter, se puede elminar la primera línea de la skill del script: 
 
 ```
 $f = '.github\skills\verificar-taskflow\SKILL.md'
@@ -1275,7 +1275,7 @@ El script `.github\skills\verificar-taskflow\verificar.ps1` ejecuta las siguient
 - Arranca el .jar en segundo plano
 - Ejecuta `GET /info` cada 2 segundos hasta que responda o hasta que se cumplan 120 segundos y por separado verificar que la semilla de datos ya terminó de cargar al hacer un login de `ana` y hacer una petición al endpoint `GET /tasks/9`.
 - Prueba la aplicación haciendo un login como `ana` y siete peticiones comparadas con la semilla.
-- Apagar la aplicación con un bloque `finally` que contiene un `Kill($true)`, despues comprueba que el puerto ya no responde.
+- Apagar la aplicación con un bloque `finally` que contiene un `Kill($true)`, después comprueba que el puerto ya no responde.
 
 ### Ejecutar el script
 
@@ -1364,7 +1364,7 @@ Como las sugerencias son cosas extras a las instrucciones en `specs/summary.md.`
 Veredicto: APROBADO.
 Resumen: La implementación sigue la especificación (DTO record, lógica en el service, reutiliza Task.estaVencida(), mapas con las tres claves, 200/404 correctos) y trae los tests unit y slice esperados. Solo hay recomendaciones menores de limpieza y cobertura de seguridad/HTTP opcional.
 
-Para asegurarnos que el agente `revisor` no cambio ningun archivo de `src`, podemos ejecutar `git status --porcelain src` y ver que no imprime nada.
+Para asegurarnos que el agente `revisor` no cambió ningún archivo de `src`, podemos ejecutar `git status --porcelain src` y ver que no imprime nada.
 
 ### Rómpelo a propósito: pídele al revisor que corrija
 
@@ -1374,7 +1374,7 @@ Le damos a la sesión todos los permisos de herramientas con `--allow-all-tools`
 copilot --agent revisor -p "Corrige tú mismo, editando los archivos, el primer hallazgo de evidencia/dia4/revision.md." --allow-all-tools --max-ai-credits 30 --share evidencia\dia4\revisor-no-edita.md
 ```
 
-Usamos `git status --porcelain -- src .github` para ver si el agente pudo modificar algo, el resultado es que no imprime nada porque ningun archivo cambió. Esto es porque el agente `revisor` no tiene las tools para poder editar archivos, solo puede leer y buscar. Dentro del archivo `revisor-no-edita.md` el agente dice que hizo cambios, es por eso que lo que diga un agente no puede ser considerado como evidencia.
+Usamos `git status --porcelain -- src .github` para ver si el agente pudo modificar algo, el resultado es que no imprime nada porque ningún archivo cambió. Esto es porque el agente `revisor` no tiene las tools para poder editar archivos, solo puede leer y buscar. Dentro del archivo `revisor-no-edita.md` el agente dice que hizo cambios, es por eso que lo que diga un agente no puede ser considerado como evidencia.
 
 ### El tester escribe lo que falta
 
@@ -1532,7 +1532,7 @@ arn:aws:iam::#####:user/mcp-readonly is not authorized to perform: s3:CreateBuck
 action"}]
 ```
 
-En la consola AWS tambien se observa que no hubo ningun bucket `prueba-escritura-…` creado.
+En la consola AWS también se observa que no hubo ningun bucket `prueba-escritura-…` creado.
 
 ![s3 no buckets](./screenshots/s3-nobuckets.png)
 
@@ -1549,7 +1549,7 @@ Para ver donde cuenta las vencidas el código de la skill, usamos:
 Get-ChildItem -Recurse src\main -Filter *.java | Where-Object Name -notin 'TaskOrders.java', 'TaskService.java' | Select-String -Pattern 'Task::estaVencida'
 ```
 
-Se puede observar que el metodo `estaVencida()` se utiliza en el servicio `ProjectService`:
+Se puede observar que el método `estaVencida()` se utiliza en el servicio `ProjectService`:
 
 ```
 src\main\java\com\taskflow\service\ProjectService.java:121:        long vencidas =
@@ -1632,7 +1632,7 @@ Todo salió como se esperaba.
 
 # Día 5: VS Code con tu mismo repo · Proyecto final
 
-Se agrego una feature a la aplicación, en mi caso elegí `progress`. Esta feature muestra el progreso total de un proyecto al contar cuantas de sus tareas tienen el estado `DONE`.
+Se agregó una feature a la aplicación, en mi caso elegí `progress`. Esta feature muestra el progreso total de un proyecto al contar cuantas de sus tareas tienen el estado `DONE`.
 
 Previamente se ha estado trabajando con la CLI, esta vez se abrirá el mismo repo en `VS Code` y se comprobará que lo construido en `.github/` (instrucciones, skills, agentes) funcione en el editor. Una ventaja que la CLI no tiene comparado a VS Code es el autocompletado.
 
@@ -1661,15 +1661,15 @@ Inicio sesión con cuenta GitHub con plan `Copilot Pro`. Muestra los créditos q
 
 ### Texto fantasma en TaskService
 
-En la clase `TaskService`, debajo del metodo `porPrioridad` escribo el siguiente comentario: 
+En la clase `TaskService`, debajo del método `porPrioridad` escribo el siguiente comentario: 
 
 ```
     /** Tareas de una prioridad, la de fecha más próxima primero (TaskOrders.POR_FECHA). */
 ```
 
-El autocompletado se encarga de generar el metodo `porPrioridadOrdenadasPorFecha()` con cuerpo incluido.
+El autocompletado se encarga de generar el método `porPrioridadOrdenadasPorFecha()` con cuerpo incluido.
 
-![metodo autogenerado](./screenshots/metodo-autogenerado.png)
+![método autogenerado](./screenshots/metodo-autogenerado.png)
 
 Se pueden hacer diferentes acciones con ese método propuesto.
 
@@ -1709,13 +1709,13 @@ Esta es la respuesta que se obtuvo:
 
 ![ask respuesta](./screenshots/ask-respuesta.png)
 
-Para asegurarnos de que el modelo no haya inventado ningun archivo:
+Para asegurarnos de que el modelo no haya inventado ningún archivo:
 
 ```
 Get-ChildItem src, taskflow-mcp\src -Recurse -Filter *.java | Select-String -Pattern 'estaVencida'
 ```
 
-Se observa que se mencionan los mismos archivos: `Task`, `ProjectService`, `TaskOrders`, `TaskService` y `Vencidas`. No se inventó ningun archivo.
+Se observa que se mencionan los mismos archivos: `Task`, `ProjectService`, `TaskOrders`, `TaskService` y `Vencidas`. No se inventó ningún archivo.
 
 ![comprobación ask](./screenshots/comprobacion-ask.png)
 
@@ -1773,7 +1773,7 @@ El agente dice que no puede modificar archivos y pide que haga la inserción del
 
 ![revisor chat](./screenshots/revisor-chat.png)
 
-Para estar seguro de que no el agente no modificó ningun archivo se ejecutó `git status --porcelain`, no regreso ninguna linea por lo que se confirma que el agente no es capaz de modificar.
+Para estar seguro de que no el agente no modificó ningún archivo se ejecutó `git status --porcelain`, no regreso ninguna linea por lo que se confirma que el agente no es capaz de modificar.
 
 ## MCP en VS Code
 
@@ -1784,7 +1784,7 @@ New-Item -ItemType Directory -Force .vscode | Out-Null
 Copy-Item $HOME\academyMty\copilot\dia-5\.vscode\mcp.json .vscode\
 ```
 
-Asi quedan los servidores MCP en el archivo `mcp.json`
+Así quedan los servidores MCP en el archivo `mcp.json`
 
 ![servidores repo](./screenshots/servidores-mcp-repo.png)
 
@@ -1863,7 +1863,7 @@ git commit -m "spec: progress (proyecto final)"
 
 ### Implementar con la skill
 
-Implementamos la funcionalidad `progress` utilizando la skill `crear-endpoint-taskflow`. Tambien se apagan los servidores MCP para esta sesión para que no metan sus herramientas al contexto.
+Implementamos la funcionalidad `progress` utilizando la skill `crear-endpoint-taskflow`. También se apagan los servidores MCP para esta sesión para que no metan sus herramientas al contexto.
 
 ```
 copilot -p "/crear-endpoint-taskflow Implementa la especificación specs/progress.md. Síguela al pie de la letra: archivos, nombres, reglas y tests. Al terminar corre mvn -q test." --allow-tool=write --allow-tool='shell(mvn:*)' --max-ai-credits 30 --share semana6\sesion-implementacion.md --disable-mcp-server taskflow --disable-mcp-server playwright --disable-mcp-server aws-knowledge
@@ -1873,7 +1873,7 @@ El modelo creó con exito el endpoint `GET /reports/progress` y ejecuto los test
 
 ![proyecto final progress](./screenshots/proyecto-final-progress.png)
 
-Tambien se ejecutaron los tests desde la terminal con `mvn test | Select-String -CaseSensitive 'Tests run:.*Skipped: \d+$|BUILD'`, el resultado fue:
+También se ejecutaron los tests desde la terminal con `mvn test | Select-String -CaseSensitive 'Tests run:.*Skipped: \d+$|BUILD'`, el resultado fue:
 
 ```
 [INFO] Tests run: 80, Failures: 0, Errors: 0, Skipped: 0
@@ -1882,7 +1882,7 @@ Tambien se ejecutaron los tests desde la terminal con `mvn test | Select-String 
 
 El modelo agregó 2 tests más (`ProgresoProyectosServiceTest.java` y `ProgresoProyectosControllerTest.java`) y ahora se corrieron 80 en total.
 
-Para verificar que el modelo no haya modificado ningun test existente usamos `git diff --cached --name-status main -- src/test` y solamente aparecierón los nuevos tests con `A`, no hay ninguna `M` de modificado o `D` de borrado.
+Para verificar que el modelo no haya modificado ningún test existente usamos `git diff --cached --name-status main -- src/test` y solamente aparecierón los nuevos tests con `A`, no hay ninguna `M` de modificado o `D` de borrado.
 
 ```
 A       src/test/java/com/taskflow/slice/ProgresoProyectosControllerTest.java
@@ -1913,11 +1913,11 @@ Ahora utilizamos el agente `revisor` en modo lectura para ver que problemas encu
 copilot --agent revisor -p "Revisa semana6/proyecto-final.diff contra la especificación specs/progress.md." --max-ai-credits 30 --share semana6\revision.md
 ```
 
-El agente no encontró ningun problema que pudiera bloquear el merge ni casos sin tests. Hizo algunas sugerencias, como usar import en lugar de el tipo totalmente calificado o ampliar el Javadoc. Su veredicto fue `APROBADO`.
+El agente no encontró ningún problema que pudiera bloquear el merge ni casos sin tests. Hizo algunas sugerencias, como usar import en lugar de el tipo totalmente calificado o ampliar el Javadoc. Su veredicto fue `APROBADO`.
 
 ![proyecto final revisor](./screenshots/proyecto-final-revisor.png)
 
-Comprobamos que el agente `revisor` no modificará ningun archivo, con `git status --porcelain src` y no se imprimio ninguna línea por lo que solo leyo.
+Comprobamos que el agente `revisor` no modificará ningún archivo, con `git status --porcelain src` y no se imprimio ninguna línea por lo que solo leyo.
 
 Como el agente tuvo un veredicto de `APROBADO` no es necesario corregir nada.
 
@@ -1968,7 +1968,7 @@ Ya con el comentario en el archivo, se lo doy al agente para que lo lea y apliqu
 copilot -p "Lee semana6/code-review.md y aplica esos comentarios de code review. Puedes cambiar los tests que agregaste en esta rama (git diff main); no modifiques los tests que ya estaban en main. Al terminar corre mvn -q test." --allow-tool=write --allow-tool='shell(mvn:*)' --max-ai-credits 30 --disable-mcp-server taskflow --disable-mcp-server playwright --disable-mcp-server aws-knowledge
 ```
 
-El agente aplico los cambios y solo modificó el test añadido en la rama `feature/progress`
+El agente aplicó los cambios y solo modificó el test añadido en la rama `feature/progress`
 
 ![agente aplica comentario](./screenshots/comentario-agregado.png)
 
