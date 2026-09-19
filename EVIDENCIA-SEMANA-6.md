@@ -1,4 +1,288 @@
-# El agente trabaja: especificar, implementar y revisar
+# Evidencia de la semana · GitHub Copilot
+
+# Alumno: Daniel Degollado Rodríguez · Repo: https://github.com/DanielDegollado4/taskflow-copilot-DanielDegollado4
+
+# Día 1: La CLI: instalar, entender y conversar con tu repo
+
+Trabajaré con un agente que lee el código, puede ejecutar comandos y editar archvios cuando se lo solicite. El agente trabaja sobre una copia de `taskflow-api`.
+
+Primero hay que instalar las herramientas que se van a usar.
+
+Instale Node.js
+
+```
+winget install --id OpenJS.NodeJS.LTS -e --accept-source-agreements --accept-package-agreements
+```
+
+Instale la CLI de Copilot
+
+```
+npm install -g @github/copilot
+```
+## Tu repo `taskflow-copilot-DanielDegollado4`
+
+El repositorio donde se estará trabajando toda la semana es: `https://github.com/DanielDegollado4/taskflow-copilot-DanielDegollado4` que almacena una copia de `taskflow-api`
+
+### La suite
+
+Para asegurarme de que el proyecto no viniera con ningun error corrí la suit de tests.
+
+```
+mvn -q clean test
+```
+
+Obtuve como resultado `tests: 67 · fallos y errores: 0`, ya con esto se que se puede trabajar con este proyecto sin preocuparme de problemas previos.
+
+## Modelo y costo
+
+### Fijar gpt-5-mini y leer los medidores
+
+Voy a trabajar con el modelo `gpt-5-mini` porque es uno de los que consume menos créditos por solicitud en comparación con otros modelos como Claude Sonnet 5 por ejemplo.
+
+Fije el modelo `gpt-5-mini`
+
+```
+[Environment]::SetEnvironmentVariable('COPILOT_MODEL','gpt-5-mini','User')
+```
+
+Desde Copilot CLI, con `/model` se puede ver cual es el modelo que esta seleccionado para esa sesión.
+
+![modelo seleccionado](./screenshots/modelo-seleccionado.png)
+
+Tambien ejecute `/usage` (mostró `AI Credits 0`) y `/context` para ver cuantos creditos usados llevo en la sesión y cuanto contexto llevo.
+
+## Pregúntale al repo (sin tocarlo)
+
+### Tres preguntas y tres comprobaciones
+
+Le voy a hacer tres preguntas relacionadas con el repositorio actual al agente, para después comprobar por mi mismo si dijo la verdad. 
+
+Pregunta 1: `¿Qué hay en este repo?`
+
+Para hacerle esta pregunta al agente, utilicé este prompt:
+
+```
+Explícame este repositorio a alguien que llega nuevo: qué hace la aplicación, con qué tecnologías está hecha y cómo está organizado el código. Máximo 10 viñetas. Al final, lista las rutas de los archivos que leíste para responder.
+```
+
+Lo que respondió el agente:
+
+![resumen repo](./screenshots/resumen-repo.png)
+
+Para comprobar si dice la verdad, tengo que checar las carpetas que existen de verdad dentro del código con `Get-ChildItem src\main\java\com\taskflow -Directory | Select-Object -ExpandProperty Name`
+
+Se imprimierón diez nombres:
+
+```
+advice
+config
+controller
+dto
+exception
+mapper
+model
+repository
+security
+service
+```
+
+Despues de hacer la comparación, la respuesta del agente sí hace referencia a todas las carpetas que se mostrarón con el comando.
+
+Pregunta 2: `¿Dónde está una regla concreta?`
+
+Le dí el siguiente prompt al agente: 
+
+```
+¿Dónde está la regla que decide si una tarea está vencida? Dime la clase, el método y el número de línea, y en qué otros archivos del proyecto se usa ese método.
+```
+
+El agente contesto:
+
+![usos estaVencida](./screenshots/pregunta2-respuesta.png)
+
+Para hacer la comprobación por mi cuenta, busqué todas las líneas de codigo donde aparece `estaVencida`.
+
+```
+Get-ChildItem -Recurse -Filter *.java src | Select-String -Pattern 'estaVencida' | Select-Object Filename, LineNumber
+```
+
+El resultado fueron las siguientes líneas:
+
+```
+Filename            LineNumber
+--------            ----------
+Task.java                  152
+Task.java                  261
+ProjectService.java        112
+ProjectService.java        121
+TaskOrders.java             39
+TaskOrders.java             44
+TaskOrders.java             48
+TaskService.java           126
+TaskService.java           129
+```
+
+Haciendo la comparación, el modelo menciono casi todas las líneas, solamente le falto la línea 261 del archivo `Task.java`.
+
+Pregunta 3: `¿Existe un endpoint que no existe?`
+
+Use el prompt:
+
+```
+¿Qué endpoint de la API devuelve las tareas vencidas? Dame la ruta HTTP y el método del controlador que lo atiende.
+```
+
+El agente no pudo encontrar ningun endpoint que regrese tareas vencidas, dio una propuesta de como podría implementarse.
+
+![endpoint tareas vencidas](./screenshots/pregunta3-respuesta.png)
+
+Para comprobar que efectivamente no hay ningun endpoint para las tareas vencidas, use `Get-ChildItem src\main\java\com\taskflow\controller -Filter *.java | Select-String -Pattern '@(Get|Post|Put|Patch|Delete)Mapping\(' | Select-Object Filename, LineNumber, Line` y no pude encontrarlo en ningun controller. El agente dijo la verdad.
+
+## Permisos: aprobar, negar y deshacer
+
+Se probo con diferentes prompts para ver que permisos me pide el agente y que opciones tengo para responderle.
+
+### Tres pedidos que tocan tu máquina
+
+El siguiente prompt hace que el agente me pida permiso para correr un comando: 
+
+```
+Corre mvn -q test y dime solo si terminó bien o con error.
+```
+
+![permiso para ejecutar](./screenshots/agente-permiso1.png)
+
+Seleccione `1. Yes` para que solo lo apruebe por esta vez. El agente respondio `Terminó bien`
+
+Para negar algo use el prompt:
+
+```
+Borra la carpeta target.
+```
+
+El agente propuso utilizar el comando `Remove-Item -LiteralPath 'C:\Users\danie\taskflow-copilot-DanielDegollado4\target' -Recurse -Force -ErrorAction 
+Stop; Write-Output 'TARGET_REMOVED'`
+
+Elegí la opción `2. No, and tell Copilot what to do differently` y le dije que no borrara nada.
+
+Comprobé que target siguierá existiendo con `Test-Path target`, me dio True.
+
+Ahora para aprobar un permiso, ver que realmenta haya cambiado algo y luego deshacerlo para dejarlo como estaba use el prompt:
+
+```
+Agrega al final de README.md esta línea: Repositorio de práctica de la Semana 6.
+```
+
+El agente me pidió permiso para ejecutar el siguiente comando, le respondí `1. Yes`. Y después añadió la línea al final de README.md.
+
+```
+Add-Content -LiteralPath 'C:\Users\danie\taskflow-copilot-DanielDegollado4\README.md' -Value "`r`nRepositorio de
+ práctica de la Semana 6."; Write-Output 'APPEND_OK'
+ ```
+
+En la CLI, hice la comprobación de que el agente haya añadido la linea con `/diff`. Confirme que el agente la agregó.
+
+![linea final readme](./screenshots/linea-final-readme.png)
+
+Para regresar el README.me a su estado previo use `/rewind` en la CLI.
+
+## Instrucciones del proyecto
+
+Generé el archivo `.github/copilot-instructions.md` con `/init` en la CLI, pero como este tenía algunos detalles (lenguaje ingles, comandos docker, no tiene ningun limite para el agente) se cambio por el del curso.
+
+```
+New-Item -ItemType Directory -Force .github | Out-Null
+Copy-Item $HOME\academyMty\copilot\dia-1\copilot-instructions.md .github\copilot-instructions.md -Force
+```
+
+Ahora el archivo `.github/copilot-instructions.md` es el del curso, para comprobarlo use `Select-String -Path .github\copilot-instructions.md -Pattern '^# Instrucciones de Copilot para TaskFlow API'`. Me regresó `.github\copilot-instructions.md:1:# Instrucciones de Copilot para TaskFlow API`, se que es la versión del curso porque esta en español.
+
+Para comprobar que la CLI lo carga, use `/instructions` y el archivo sí aparece ahi.
+
+![instrucciones cargadas](./screenshots/instructions-loaded-cli.png)
+
+## Integrador — `docs/ARQUITECTURA.md`, escrito por el agente y verificado por ti
+
+Le pedi al agente que generará el archivo `docs/ARQUITECTURA.md` para que un desarrollador que acabad de llegar pueda entender cuales son las partes de la aplicación y como es su funcionamiento, utilice el siguiente prompt: 
+
+```
+Escribe el archivo docs/ARQUITECTURA.md para un desarrollador que llega nuevo a TaskFlow. Explica: las capas y paquetes; el recorrido completo de POST /projects/{projectId}/tasks desde el controlador hasta la base de datos; dónde viven las reglas de negocio; cómo funciona la seguridad con JWT; y cómo están organizados los tests. Escribe entre backticks cada clase del proyecto (por ejemplo `TaskService`) y cada archivo con su ruta desde la raíz del repositorio (por ejemplo `src/main/java/com/taskflow/model/Task.java`). No modifiques ningún otro archivo.
+```
+
+### El verificador
+
+Para verificar que realmente generó una arquitectura que mencione archivos que sí existan, use el verificador del curso `verificar-arquitectura.ps1`. El verificador arrojó que hubo 0 clases mencionadas que no existen, por lo que el agente hizo un buen trabajo.
+
+![verificador arquitectura](./screenshots/verificador-arquitectura.png)
+
+### Rómpelo a propósito
+
+Ahora para probar que el verificador puede detectar clases que no existen, voy a agregar una clase inventada. Lo que el verificador diga se va a guardar en el documento `evidencia\dia1\verificador.txt` para que un agente pueda leerlo y hacer modificaciones sobre el proyecto.
+
+Para agregar la clase:
+
+```
+Add-Content docs\ARQUITECTURA.md 'Las fechas límite se validan en `TaskDateValidator` (`src/main/java/com/taskflow/service/TaskDateValidator.java`).'
+```
+
+Ahora el verificador da este resultado:
+
+![verificador arquitectura no existe](./screenshots/verificador-no-existe-arquitectura.png)
+
+En lugar de corregir la arquitectura manualmente, le dije al agente que lo hiciera:
+
+```
+Lee evidencia/dia1/verificador.txt: la sección «Lo que NO EXISTE» lista menciones de docs/ARQUITECTURA.md que no existen en el repositorio. Corrige solo esas líneas de docs/ARQUITECTURA.md: pon la clase y el archivo reales o borra la frase. No modifiques nada más.
+```
+
+El agente me pidió permiso para modificar `docs/ARQUITECTURA.md`, se lo dí y quito la línea que menciona `TaskDateValidator`.
+
+![arquitectura arreglada](./screenshots/architecture-fixed.png)
+
+Volví a correr el verificador y mostró `0 NO EXISTE` otra vez.
+
+### Lo que el verificador no ve
+
+El verificador solo checa que los nombres que se mencionan en la arquitectura no existen, no sabe si lo que se dice de ellos sea cierto.
+
+Por ejemplo, para ver el recorrido de `POST /projects/{projectId}/tasks` y ver si tiene sentido lo que el agente escribió use `Select-String -Path docs\ARQUITECTURA.md -Pattern 'buscarPorId'`. Me regresó el siguiente recorride:
+
+![recorrido crear task](./screenshots/architecture-createtask-path.png)
+
+El método `createTask` de `TaskController` usa los metodos `buscarPorId` de `ProjectService` para encontrar el projecto donde se va a crear la task y el metodo `crear` de `TaskService` para crearla; `TaskService` mapea entidades con el metodo `aEntidadNueva` de `TaskMapper`, después se usa la regla `Task.crear` y finalmente se guarda con `TaskRepository.save`. Todo el recorrido tiene sentido y no se incluye ninguna clase que no sea necesitada o no exista.
+
+### Evidencia y push
+
+Guarde cuanto usage tenía al final del día en `evidencia\dia1\usage.txt`, el contenido se basa en el archivo `evidencia\dia1\uso-integrador.json` creado por la CLI al usar `/usage` y luego `/exit`.
+
+`evidencia\dia1` lista:
+
+```
+Name                Length
+----                ------
+copilot-version.txt     72
+usage.txt               54
+uso-integrador.json   2224
+verificador.txt      11196
+```
+
+Además se construyó `.github/copilot-instructions.md` y `docs/ARQUITECTURA.md`.
+
+Push al repo con todo lo agregado:
+
+```
+git add docs evidencia
+git commit -m "Día 1: ARQUITECTURA.md verificado y evidencia"
+git push
+```
+
+Repo: https://github.com/DanielDegollado4/taskflow-copilot-DanielDegollado4/tree/main/evidencia/dia1 
+
+## Que no salió
+
+No experimenté ningún error, pude seguir todas las instrucciones
+
+# Día 2: El agente trabaja: especificar, implementar y revisar
 
 Ahora el agente escribirá código: dos endpoints nuevos de TaskFlow, `GET /tasks/overdue` y `GET /tasks/unassigned`, con sus tests. 
 
@@ -472,11 +756,29 @@ Usage al terminar el día:
 
 ![usage dia 2](./screenshots/usageFinalDia2.png)
 
+`evidencia/dia2` lista:
+
+```
+Name                  Length
+----                  ------
+checklist-overdue.txt   2138
+comprobacion.txt          50
+pr.txt                    82
+suite-main.txt            84
+usage.txt                271
+```
+
+Nuevos endpoints `GET /tasks/overdue` y `GET /tasks/unassigned` con sus tests y las specs `specs/overdue.md` y `specs/unassigned.md`.
+
 Repo: https://github.com/DanielDegollado4/taskflow-copilot-DanielDegollado4/tree/main/evidencia/dia2 
 
-# MCP: darle herramientas al agente
+### Qué no salió
 
-Le conectaremos herramientas al agente mediante MCP (Model Context Protocol): el servidor de GitHub para que abra un issue en tu repo, el de documentación de AWS, Playwright para que maneje la UI de TaskFlow en un navegador, y uno escrito en Java, que habla con la API de TaskFlow.
+No me encontré con ningun problema.
+
+# Día 3: MCP: darle herramientas al agente
+
+Le conectaremos herramientas al agente mediante MCP (Model Context Protocol): el servidor de GitHub para que abra un issue en el repo, el de documentación de AWS, Playwright para que maneje la UI de TaskFlow en un navegador, y uno escrito en Java, que habla con la API de TaskFlow.
 
 ### Los servidores que ya tienes
 
@@ -825,9 +1127,31 @@ git commit -m "dia 3: servidor MCP taskflow, issue summary y evidencia"
 git push
 ```
 
+`evidencia/dia3` lista:
+
+```
+Name                 Length
+----                 ------
+aws-auditoria.txt       253
+aws-knowledge.md       7964
+conteos.txt             149
+integrador.md          3304
+issue-summary.txt         3
+mcp-list-inicio.txt     148
+mcp-list.txt             83
+playwright-tarea.txt    158
+playwright.md          8262
+```
+
+Se creó el servidor MCP `taskflow-mcp` y el issue `GET /projects/{id}/summary` con el cuerpo idéntico a `issues/summary.md`.
+
 Repo: https://github.com/DanielDegollado4/taskflow-copilot-DanielDegollado4/tree/main/evidencia/dia3
 
-# Skills y agentes personalizados
+### Qué no salió
+
+Pude ejecutar todas las instrucciones sin problema.
+
+# Día 4: Skills y agentes personalizados
 
 Hasta ahora, le hemos estado explicando al agente prompt por prompt lo que tiene que hacer. Utilizando las skills, puedo escribir estas instrucciones una sola vez: una skill con la receta para crear un endpoint, otra con un script que arranca la app y la prueba, y dos agentes con permisos distintos, un revisor que no puede tocar nada y un tester que solo escribe tests. Con estas herramientas se creará el endpoint `GET /projects/{id}/summary` descrito en el issue abierto previamente.
 
@@ -1279,9 +1603,34 @@ Merge pull request → Confirm merge.
 
 ### Evidencia
 
+`evidencia/dia4` lista:
+
+```
+Name                Length
+----                ------
+aws-resultado.txt     1315
+revision.md          38296
+revisor-no-edita.md  42688
+summary-sesion.md   156876
+summary.diff          6428
+tester-sesion.md    130558
+verificar-sesion.md   3143
+verificar.txt          670
+```
+
+Skills `.github/skills/crear-endpoint-taskflow/` y `.github/skills/verificar-taskflow/`
+
+Agentes `github/agents/revisor.agent.md`, `.github/agents/tester.agent.md` y `auditor-aws`.
+
+Se creó `GET /projects/{id}/summary` y fue mergeado mediante PR.
+
 Repo: https://github.com/DanielDegollado4/taskflow-copilot-DanielDegollado4/tree/main/evidencia/dia4
 
-# VS Code con tu mismo repo · Proyecto final
+### Qué no salió
+
+Todo salió como se esperaba.
+
+# Día 5: VS Code con tu mismo repo · Proyecto final
 
 Se agrego una feature a la aplicación, en mi caso elegí `progress`. Esta feature muestra el progreso total de un proyecto al contar cuantas de sus tareas tienen el estado `DONE`.
 
